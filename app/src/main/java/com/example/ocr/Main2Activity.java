@@ -281,7 +281,7 @@ public class Main2Activity extends AppCompatActivity {
     }
 
     private void deleteEmptyFile(){
-        if(!fileName.isEmpty()){
+        if(fileName != null){
             File emptyImageFile = new File(getExternalCacheDir()+"/Images/"+fileName+".jpg");
             File emptyTextFile = new File(getExternalCacheDir()+"/Results/"+fileName+".txt");
 

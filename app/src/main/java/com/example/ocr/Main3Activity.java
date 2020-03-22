@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -23,6 +22,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class Main3Activity extends AppCompatActivity {
@@ -33,6 +35,7 @@ public class Main3Activity extends AppCompatActivity {
     private File[] textFileList;
     private String[] imageFileName;
     private String[] textFileName;
+    private long[] sortedFileName;
 
     private File getImageFile;
     private File getTextFile;
@@ -58,6 +61,8 @@ public class Main3Activity extends AppCompatActivity {
         getAllFileNames();
         //showFileList(imageFileList);
         //showFileList(textFileList);
+
+        fileNameSort();
 
         initList();
 
@@ -104,6 +109,7 @@ public class Main3Activity extends AppCompatActivity {
 
                         searchAllFiles();
                         getAllFileNames();
+                        fileNameSort();
                         initList();
                         //将数据源添加到适配器
                         MyAdapter adapter = new MyAdapter(Main3Activity.this, R.layout.item, list);//绑定item子布局（图片+文字）
@@ -150,6 +156,25 @@ public class Main3Activity extends AppCompatActivity {
         }
     }
 
+    protected void fileNameSort(){//排序，从最新的到最旧的
+        sortedFileName = new long[textFileName.length];
+        for(int i = 0;i<textFileName.length;i++){
+            sortedFileName[i] = Long.parseLong(textFileName[i]);
+        }
+        if(sortedFileName.length!=0){
+            for(int i = 0;i<sortedFileName.length;i++){
+                for(int j = i;j<sortedFileName.length;j++){
+                    if (sortedFileName[i] < sortedFileName[j]) {
+                        long temp;
+                        temp = sortedFileName[i];
+                        sortedFileName[i] = sortedFileName[j];
+                        sortedFileName[j] = temp;
+                    }
+                }
+            }
+        }
+    }
+
     protected void showFileList(File[] file){//测试查看获取到的文件
         if(file != null){
             for(int i=0;i<file.length;i++){
@@ -161,9 +186,9 @@ public class Main3Activity extends AppCompatActivity {
     protected void initList(){//读取文件名、图片、文字，初始化history list
         list.clear();
 
-        for(int i=0;i<textFileList.length;i++){
-            getImageFile = imageFileList[i];
-            getTextFile = textFileList[i];
+        for(int i=0;i<sortedFileName.length;i++){
+            getImageFile = new File(getExternalCacheDir()+"/Images/"+sortedFileName[i]+".jpg");
+            getTextFile = new File(getExternalCacheDir()+"/Results/"+sortedFileName[i]+".txt");
 
             if(Build.VERSION.SDK_INT>=24) {//Android 7.0
                 imageUri= FileProvider.getUriForFile(Main3Activity.this,"com.example.ocr.fileProvider",getImageFile);
@@ -175,7 +200,7 @@ public class Main3Activity extends AppCompatActivity {
             try {
                 Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
                 String string = readFromTXT(getTextFile);
-                HistoryItem item = new HistoryItem(textFileName[i],bitmap,string);
+                HistoryItem item = new HistoryItem(sortedFileName[i]+"",bitmap,string);
                 list.add(item);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
